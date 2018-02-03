@@ -5,6 +5,22 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release2|Win32">
+      <Configuration>Release2</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release2|x64">
+      <Configuration>Release2</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release3|Win32">
+      <Configuration>Release3</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release3|x64">
+      <Configuration>Release3</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -39,6 +55,13 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -52,6 +75,19 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release3|x64'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release3|Win32'">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -63,10 +99,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -75,12 +117,24 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\workspace-personal\SharedLibraries\boost_1_65_1;$(OPENCV_DIR)\..\..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\workspace-personal\SharedLibraries\boost_1_65_1\stage\x64\lib;$(OPENCV_DIR)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\workspace-personal\SharedLibraries\boost_1_65_1;$(OPENCV_DIR)\..\..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\workspace-personal\SharedLibraries\boost_1_65_1\stage\x64\lib;$(OPENCV_DIR)\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\workspace-personal\SharedLibraries\boost_1_65_1;$(OPENCV_DIR)\..\..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\workspace-personal\SharedLibraries\boost_1_65_1\stage\x64\lib;$(OPENCV_DIR)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -97,15 +151,20 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_wserialization-vc141-mt-gd-1_65_1.lib;libboost_locale-vc141-mt-gd-1_65_1.lib;opencv_aruco331d.lib;opencv_bgsegm331d.lib;opencv_bioinspired331d.lib;opencv_calib3d331d.lib;opencv_ccalib331d.lib;opencv_core331d.lib;opencv_datasets331d.lib;opencv_dnn331d.lib;opencv_dpm331d.lib;opencv_face331d.lib;opencv_features2d331d.lib;opencv_flann331d.lib;opencv_fuzzy331d.lib;opencv_highgui331d.lib;opencv_imgcodecs331d.lib;opencv_imgproc331d.lib;opencv_img_hash331d.lib;opencv_line_descriptor331d.lib;opencv_ml331d.lib;opencv_objdetect331d.lib;opencv_optflow331d.lib;opencv_phase_unwrapping331d.lib;opencv_photo331d.lib;opencv_plot331d.lib;opencv_reg331d.lib;opencv_rgbd331d.lib;opencv_saliency331d.lib;opencv_shape331d.lib;opencv_stereo331d.lib;opencv_stitching331d.lib;opencv_structured_light331d.lib;opencv_superres331d.lib;opencv_surface_matching331d.lib;opencv_text331d.lib;opencv_tracking331d.lib;opencv_video331d.lib;opencv_videoio331d.lib;opencv_videostab331d.lib;opencv_xfeatures2d331d.lib;opencv_ximgproc331d.lib;opencv_xobjdetect331d.lib;opencv_xphoto331d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -125,7 +184,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -133,7 +192,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,18 +201,96 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_wserialization-vc141-mt-1_65_1.lib;libboost_locale-vc141-mt-1_65_1.lib;opencv_aruco331.lib;opencv_bgsegm331.lib;opencv_bioinspired331.lib;opencv_calib3d331.lib;opencv_ccalib331.lib;opencv_core331.lib;opencv_datasets331.lib;opencv_dnn331.lib;opencv_dpm331.lib;opencv_face331.lib;opencv_features2d331.lib;opencv_flann331.lib;opencv_fuzzy331.lib;opencv_highgui331.lib;opencv_imgcodecs331.lib;opencv_imgproc331.lib;opencv_img_hash331.lib;opencv_line_descriptor331.lib;opencv_ml331.lib;opencv_objdetect331.lib;opencv_optflow331.lib;opencv_phase_unwrapping331.lib;opencv_photo331.lib;opencv_plot331.lib;opencv_reg331.lib;opencv_rgbd331.lib;opencv_saliency331.lib;opencv_shape331.lib;opencv_stereo331.lib;opencv_stitching331.lib;opencv_structured_light331.lib;opencv_superres331.lib;opencv_surface_matching331.lib;opencv_text331.lib;opencv_tracking331.lib;opencv_video331.lib;opencv_videoio331.lib;opencv_videostab331.lib;opencv_xfeatures2d331.lib;opencv_ximgproc331.lib;opencv_xobjdetect331.lib;opencv_xphoto331.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OPENCV_DIR)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libboost_wserialization-vc141-mt-1_65_1.lib;libboost_locale-vc141-mt-1_65_1.lib;opencv_aruco331.lib;opencv_bgsegm331.lib;opencv_bioinspired331.lib;opencv_calib3d331.lib;opencv_ccalib331.lib;opencv_core331.lib;opencv_datasets331.lib;opencv_dnn331.lib;opencv_dpm331.lib;opencv_face331.lib;opencv_features2d331.lib;opencv_flann331.lib;opencv_fuzzy331.lib;opencv_highgui331.lib;opencv_imgcodecs331.lib;opencv_imgproc331.lib;opencv_img_hash331.lib;opencv_line_descriptor331.lib;opencv_ml331.lib;opencv_objdetect331.lib;opencv_optflow331.lib;opencv_phase_unwrapping331.lib;opencv_photo331.lib;opencv_plot331.lib;opencv_reg331.lib;opencv_rgbd331.lib;opencv_saliency331.lib;opencv_shape331.lib;opencv_stereo331.lib;opencv_stitching331.lib;opencv_structured_light331.lib;opencv_superres331.lib;opencv_surface_matching331.lib;opencv_text331.lib;opencv_tracking331.lib;opencv_video331.lib;opencv_videoio331.lib;opencv_videostab331.lib;opencv_xfeatures2d331.lib;opencv_ximgproc331.lib;opencv_xobjdetect331.lib;opencv_xphoto331.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="lyonste\feature2D\featureDescription\featureDescription.h" />
+    <ClInclude Include="lyonste\feature2D\featureDetection\featureDetection.h" />
+    <ClInclude Include="lyonste\feature2D\featureDetection\segmenttest.h" />
+    <ClInclude Include="lyonste\fileManagement.h" />
+    <ClInclude Include="lyonste\hal.h" />
+    <ClInclude Include="lyonste\lyonste.h" />
+    <ClInclude Include="lyonste\matrix\integral.h" />
+    <ClInclude Include="lyonste\matrix\matrix.h" />
+    <ClInclude Include="lyonste\matrix\resizer.h" />
+    <ClInclude Include="lyonste\videoSig.h" />
+    <ClInclude Include="lyonste\videoSigGen.h" />
+    <ClInclude Include="lyonste\videoSigMatch.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="lyonste\feature2D\featureDescription\freak.cpp" />
+    <ClCompile Include="lyonste\feature2D\featureDetection\agast.cpp" />
+    <ClCompile Include="lyonste\feature2D\featureDetection\fast.cpp" />
+    <ClCompile Include="lyonste\feature2D\featureDetection\featureDetection.cpp" />
+    <ClCompile Include="lyonste\feature2D\featureDetection\motionDetection.cpp" />
+    <ClCompile Include="lyonste\feature2D\featureDetection\orb.cpp" />
     <ClCompile Include="NearVideoDuplicateDetector.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release2|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release2|x64'">Create</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NearVideoDuplicateDetector.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

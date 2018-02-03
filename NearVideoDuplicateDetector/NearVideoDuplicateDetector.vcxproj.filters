@@ -21,6 +21,45 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\lyonste.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\matrix\matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\matrix\resizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\feature2D\featureDetection\featureDetection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\hal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\feature2D\featureDescription\featureDescription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\matrix\integral.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\videoSig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\fileManagement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\videoSigGen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\videoSigMatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\feature2D\featureDetection\segmenttest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -29,5 +68,28 @@
     <ClCompile Include="NearVideoDuplicateDetector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDetection\fast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDetection\motionDetection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDetection\orb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDescription\freak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDetection\featureDetection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\feature2D\featureDetection\agast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NearVideoDuplicateDetector.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
