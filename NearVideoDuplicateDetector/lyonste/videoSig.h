@@ -1012,28 +1012,31 @@ namespace lyonste
 			template<class VidFileContainer>
 			constexpr void pruneCache(VidFileContainer& vidFileContainer) noexcept
 			{
-				////std::unordered_map<VideoMetaData,VideoSig> tmp;
-				//for(const auto& vidFile:vidFileContainer)
-				//{
-				//	//Update the video file locations
-				//	//TODO: implement a constant time lookup with video files as keys
-				//	for(auto itr=metaDatasToSigs.begin();itr!=metaDatasToSigs.end();++itr)
-				//	{
-				//		const fileManagement::FileInfo& cacheVidFile=itr->first.getVidFile();
-				//		if(vidFile==cacheVidFile)
-				//		{
-				//			if(vidFile.getPath()!=cacheVidFile.getPath())
-				//			{
-				//				const VideoSig& sig=itr->second;
-				//				VideoMetaData metaData=itr->first;
-				//				metaDatasToSigs.erase(itr);
-				//				metaData.updateVidFileLocation(vidFile.getPath());
-				//				metaDatasToSigs.emplace(std::move(metaData),std::move(sig));
-				//			}
-				//			break;
-				//		}
-				//	}
-				//}
+				std::vector<std::pair<VideoMetaData, VideoSig>> outOfSync;
+				for (const auto& vidFile : vidFileContainer)
+				{
+					for (auto itr = metaDatasToSigs.begin(); itr != metaDatasToSigs.end(); ++itr)
+					{
+						const fileManagement::FileInfo& cacheVidFile = itr->first.getVidFile();
+						if (vidFile == cacheVidFile)
+						{
+							if (vidFile.getPath() != cacheVidFile.getPath())
+							{
+								std::pair<VideoMetaData, VideoSig> outOfSyncPair = std::make_pair(itr->first, itr->second);
+								std::cout << "Cached location for " << cacheVidFile.getPath().filename() << " was out of sync. Updating to " << vidFile.getPath() << std::endl;
+								metaDatasToSigs.erase(itr);
+								outOfSyncPair.first.updateVidFileLocation(vidFile.getPath());
+								outOfSync.emplace_back(outOfSyncPair);
+							}
+							break;
+						}
+					}
+				}
+				for (auto& outOfSyncPair : outOfSync)
+				{
+					metaDatasToSigs.emplace(outOfSyncPair.first, outOfSyncPair.second);
+				}
+
 
 				std::unordered_set<fileManagement::FileInfo> kfFiles;
 				fileManagement::FileGatherer<fileManagement::FileInfo> sigGatherer(cacheFile.parent_path(),std::numeric_limits<size_t>::max(),false,std::vector<boost::regex>{boost::regex("(.*)\\.sig")},std::vector<boost::regex>{boost::regex(cacheFile.string())});
