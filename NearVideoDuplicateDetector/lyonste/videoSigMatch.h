@@ -475,7 +475,7 @@ namespace lyonste
 					}
 
 
-					bool operator()(const VideoMetaData& metaData1,const VideoMetaData& metaData2) const noexcept override
+					virtual bool operator()(const VideoMetaData& metaData1,const VideoMetaData& metaData2) const noexcept override
 					{
 						const double duration1=metaData1.getDuration();
 						const double duration2=metaData2.getDuration();
@@ -515,11 +515,43 @@ namespace lyonste
 						const fileManagement::FileInfo& fileInfo2=metaData2.getVidFile();
 						return !whiteList.areJoined(fileInfo1,fileInfo2)&&!blackList.contains(fileInfo1,fileInfo2);
 					}
+				
+				};
+
+				class PartitionedMatchCandidatePredicateImpl : public DefaultMatchCandidatePredicateImpl
+				{
+				public:
+					inline PartitionedMatchCandidatePredicateImpl(const boost::property_tree::ptree& properties) :
+						DefaultMatchCandidatePredicateImpl(properties)
+					{
+
+					}
+					bool operator()(const VideoMetaData& metaData1, const VideoMetaData& metaData2) const noexcept override
+					{
+						//if (DefaultMatchCandidatePredicateImpl::operator()(metaData1, metaData2))
+						//{
+						//	const boost::filesystem::path& parentPath1=metaData1.getVidFile().getPath().parent_path();
+						//	const boost::filesystem::path& parentPath2=metaData2.getVidFile().getPath().parent_path();
+						//	if (parentPath1 != parentPath2)
+						//	{
+						//		std::cout << "parent path 1 : " << parentPath1 << "; parent path2 : " << parentPath2 << std::endl;
+						//		return true;
+						//	}
+						//}
+						//return false;
+						return DefaultMatchCandidatePredicateImpl::operator()(metaData1, metaData2) && 
+							metaData1.getVidFile().getPath().parent_path() != metaData2.getVidFile().getPath().parent_path();
+					}
+
 				};
 
 
 				static const MatchCandidatePredicateImpl* const getImpl(const boost::property_tree::ptree& properties)
 				{
+					if (properties.get<std::string>("matchCandidatePredicateType", "default") == "partitioned")
+					{
+						return new PartitionedMatchCandidatePredicateImpl(properties);
+					}
 					return new DefaultMatchCandidatePredicateImpl(properties);
 				}
 
