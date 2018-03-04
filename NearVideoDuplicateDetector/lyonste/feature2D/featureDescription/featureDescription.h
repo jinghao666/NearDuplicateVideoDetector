@@ -305,7 +305,11 @@ namespace lyonste
 										}
 									}
 								}
-								avg+=(dist1/dist2);
+								double ratio = dist1 / dist2;
+								if (ratio == ratio)
+								{
+									avg += ratio;
+								}
 							}
 							return avg/numQueryDescriptors;
 						}

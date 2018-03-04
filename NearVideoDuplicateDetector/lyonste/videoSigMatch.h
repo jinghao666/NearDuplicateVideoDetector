@@ -26,6 +26,14 @@ namespace lyonste
 				inline SigMatch() noexcept
 				{}
 
+				inline SigMatch(const std::pair<VideoMetaData, VideoMetaData>& pair) noexcept
+					:vid1(pair.first),
+					vid2(pair.second),
+					similarity(1)
+				{
+
+				}
+
 				inline SigMatch(const std::pair<VideoMetaData,VideoMetaData>& pair,double similarity) noexcept
 					:vid1(pair.first),
 					vid2(pair.second),
@@ -68,14 +76,7 @@ namespace lyonste
 
 				constexpr double getSigSimilarity(size_t numUsedFrames,double keyFrameInterval,double nextPos,KeyFrameItr<descType> longerItr,KeyFrameItr<descType>shrterItr,KeyFrameItr<descType> longerEnd,KeyFrameItr<descType>shrterEnd,double similarityThreshold) const noexcept
 				{
-					//const double longerDuration=longer.getDuration();
-					//const double keyFrameInterval=longerDuration*keyFrameIntervalRatio;
 					double similarity=0;
-					//double nextPos=longerDuration*skipRatio;
-					//size_t numUsedFrames=longer.size();
-					//KeyFrameItr<descType> shrterItr=shrter.begin();
-					//const KeyFrameItr<descType> shrterEnd=shrter.end();
-					//for(const auto&[longerTimeIndex,longerKF]:longer)
 					for(;longerItr!=longerEnd;++longerItr)
 					{
 						const double longerTimeIndex=longerItr->first;
@@ -88,6 +89,7 @@ namespace lyonste
 						similarity+=descMatcher->getFrameSimilarity(longerKF,VideoSigPtr<descType>::iterateKeyFrameItr(shrterItr,longerTimeIndex,shrterEnd)->second);
 						if(similarity/numUsedFrames>similarityThreshold)
 						{
+							//std::cout << "exit 1: similarity=" << similarity << "; numUsedFrames=" << numUsedFrames << "; similarityThreshold=" << similarityThreshold << std::endl;
 							//no match
 							return similarityThreshold+1;
 						}
@@ -95,6 +97,7 @@ namespace lyonste
 					}
 					if(numUsedFrames)
 					{
+						//std::cout << "exit 2: similarity=" << similarity << "; numUsedFrames=" << numUsedFrames << std::endl;
 						return similarity/numUsedFrames;
 					}
 					return similarityThreshold+1;
@@ -446,113 +449,149 @@ namespace lyonste
 					{}
 				};
 
-				class DefaultMatchCandidatePredicateImpl: public MatchCandidatePredicateImpl
+				template<typename T>
+				class RatioAndDiffPredicate
 				{
 				private:
-					double minDuration;
-					double maxDuration;
-					double maxAbsoluteDurationDiff;
-					double maxDurationRatio;
-					DisjointSet<fileManagement::FileInfo> whiteList;
-					MutualMap<fileManagement::FileInfo> blackList;
+					const T minVal;
+					const T maxVal;
+					const T maxAbsoluteDiff;
+					const double maxRatio;
 				public:
-					inline DefaultMatchCandidatePredicateImpl(const boost::property_tree::ptree& properties)
-						:minDuration(properties.get<double>("minDuration",0)),
-						maxDuration(properties.get<double>("maxDuration",std::numeric_limits<double>::infinity())),
-						maxAbsoluteDurationDiff(properties.get<double>("maxAbsoluteDurationDiff",std::numeric_limits<double>::infinity())),
-						maxDurationRatio(properties.get<double>("maxDurationRatio",std::numeric_limits<double>::infinity()))
+					RatioAndDiffPredicate(const T& minVal, const T& maxVal, const T& maxAbsoluteDiff, const double maxRatio)
+						: minVal(minVal)
+						, maxVal(maxVal)
+						, maxAbsoluteDiff(maxAbsoluteDiff)
+						, maxRatio(maxRatio)
 					{
-						const boost::optional<std::string>& optionalWhiteListPath=properties.get_optional<std::string>("whiteListFile");
-						if(optionalWhiteListPath.is_initialized())
-						{
-							whiteList.readFromFile(boost::filesystem::path(optionalWhiteListPath.get()));
-						}
-						const boost::optional<std::string>& optionalBlackListPath=properties.get_optional<std::string>("blackListFile");
-						if(optionalBlackListPath.is_initialized())
-						{
-							blackList.readFromFile(boost::filesystem::path(optionalBlackListPath.get()));
-						}
 					}
-
-
-					virtual bool operator()(const VideoMetaData& metaData1,const VideoMetaData& metaData2) const noexcept override
+					bool operator()(const T& val1, const T& val2) const noexcept
 					{
-						const double duration1=metaData1.getDuration();
-						const double duration2=metaData2.getDuration();
-						if(duration1<duration2)
+						if (val1 < val2)
 						{
-							if(duration1<minDuration||duration2>maxDuration)
+							if (val1<minVal || val2>maxVal)
 							{
 								return false;
 							}
-							const double diff=duration2-duration1;
-							if(diff>maxAbsoluteDurationDiff)
+							const T diff = val2 - val1;
+							if (diff>maxAbsoluteDiff)
 							{
 								return false;
 							}
-							if(diff/duration2>maxDurationRatio)
+							if ((double)diff / (double)val2>maxRatio)
 							{
 								return false;
 							}
 						}
 						else
 						{
-							if(duration2<minDuration||duration1>maxDuration)
+							if (val2<minVal || val1>maxVal)
 							{
 								return false;
 							}
-							const double diff=duration1-duration2;
-							if(diff>maxAbsoluteDurationDiff)
+							const T diff = val1 - val2;
+							if (diff>maxAbsoluteDiff)
 							{
 								return false;
 							}
-							if(diff/duration1>maxDurationRatio)
+							if ((double)diff / (double)val1>maxRatio)
 							{
 								return false;
 							}
 						}
-						const fileManagement::FileInfo& fileInfo1=metaData1.getVidFile();
-						const fileManagement::FileInfo& fileInfo2=metaData2.getVidFile();
-						return !whiteList.areJoined(fileInfo1,fileInfo2)&&!blackList.contains(fileInfo1,fileInfo2);
+						return true;
 					}
-				
+				};
+				class BlackAndWhiteListPredicate
+				{
+				private:
+					DisjointSet<fileManagement::FileInfo> whiteList;
+					MutualMap<fileManagement::FileInfo> blackList;
+				public:
+					BlackAndWhiteListPredicate(const boost::optional<std::string>& optionalWhiteListPath, const boost::optional<std::string>& optionalBlackListPath)
+					{
+						if (optionalWhiteListPath.is_initialized())
+						{
+							whiteList.readFromFile(boost::filesystem::path(optionalWhiteListPath.get()));
+						}
+						if (optionalBlackListPath.is_initialized())
+						{
+							blackList.readFromFile(boost::filesystem::path(optionalBlackListPath.get()));
+						}
+					}
+					bool operator()(const fileManagement::FileInfo& file1, const fileManagement::FileInfo& file2) const noexcept
+					{
+						return !whiteList.areJoined(file1, file2) && !blackList.contains(file1, file2);
+					}
 				};
 
-				class PartitionedMatchCandidatePredicateImpl : public DefaultMatchCandidatePredicateImpl
+				class DefaultMatchCandidatePredicate : public MatchCandidatePredicateImpl
+				{
+				private:
+					RatioAndDiffPredicate<double> durationPredicate;
+					RatioAndDiffPredicate<size_t> fileSizePredicate;
+					BlackAndWhiteListPredicate blackAndWhiteListPredicate;
+				public:
+					DefaultMatchCandidatePredicate(const boost::property_tree::ptree& properties)
+						: durationPredicate(
+							properties.get<double>("minDuration", 0),
+							properties.get<double>("maxDuration", std::numeric_limits<double>::infinity()),
+							properties.get<double>("maxAbsoluteDurationDiff", std::numeric_limits<double>::infinity()),
+							properties.get<double>("maxDurationRatio", std::numeric_limits<double>::infinity())
+						)
+						, fileSizePredicate(
+							properties.get<size_t>("minFileSize", 0),
+							properties.get<size_t>("maxFileSize", std::numeric_limits<size_t>::max()),
+							properties.get<size_t>("maxAbsoluteFileSizeDiff", std::numeric_limits<size_t>::max()),
+							properties.get<double>("maxFileSizeRatio", std::numeric_limits<double>::infinity())
+						)
+						, blackAndWhiteListPredicate(
+							properties.get_optional<std::string>("whiteListFile"),
+							properties.get_optional<std::string>("blackListFile")
+						)
+					{
+
+					}
+					virtual bool operator()(const VideoMetaData& metaData1, const VideoMetaData& metaData2) const noexcept override
+					{
+						if (durationPredicate(metaData1.getDuration(), metaData2.getDuration()))
+						{
+							const fileManagement::FileInfo& file1 = metaData1.getVidFile();
+							const fileManagement::FileInfo& file2 = metaData2.getVidFile();
+							return fileSizePredicate(file1.getFileSize(), file2.getFileSize()) 
+								&& blackAndWhiteListPredicate(file1, file2);
+						}
+						return false;
+					}
+				};
+
+				
+
+				class PartitionedMatchCandidatePredicate : public DefaultMatchCandidatePredicate
 				{
 				public:
-					inline PartitionedMatchCandidatePredicateImpl(const boost::property_tree::ptree& properties) :
-						DefaultMatchCandidatePredicateImpl(properties)
+					inline PartitionedMatchCandidatePredicate(const boost::property_tree::ptree& properties) :
+						DefaultMatchCandidatePredicate(properties)
 					{
 
 					}
 					bool operator()(const VideoMetaData& metaData1, const VideoMetaData& metaData2) const noexcept override
 					{
-						//if (DefaultMatchCandidatePredicateImpl::operator()(metaData1, metaData2))
-						//{
-						//	const boost::filesystem::path& parentPath1=metaData1.getVidFile().getPath().parent_path();
-						//	const boost::filesystem::path& parentPath2=metaData2.getVidFile().getPath().parent_path();
-						//	if (parentPath1 != parentPath2)
-						//	{
-						//		std::cout << "parent path 1 : " << parentPath1 << "; parent path2 : " << parentPath2 << std::endl;
-						//		return true;
-						//	}
-						//}
-						//return false;
-						return DefaultMatchCandidatePredicateImpl::operator()(metaData1, metaData2) && 
+						return DefaultMatchCandidatePredicate::operator()(metaData1, metaData2) &&
 							metaData1.getVidFile().getPath().parent_path() != metaData2.getVidFile().getPath().parent_path();
 					}
 
 				};
 
 
+
 				static const MatchCandidatePredicateImpl* const getImpl(const boost::property_tree::ptree& properties)
 				{
 					if (properties.get<std::string>("matchCandidatePredicateType", "default") == "partitioned")
 					{
-						return new PartitionedMatchCandidatePredicateImpl(properties);
+						return new PartitionedMatchCandidatePredicate(properties);
 					}
-					return new DefaultMatchCandidatePredicateImpl(properties);
+					return new DefaultMatchCandidatePredicate(properties);
 				}
 
 				const MatchCandidatePredicateImpl* const impl;
@@ -608,6 +647,8 @@ namespace lyonste
 				typename std::vector<std::pair<VideoMetaData,VideoMetaData>>::const_iterator candidateItr;
 				
 				typename std::vector<std::pair<VideoMetaData,VideoMetaData>>::const_iterator candidateEnd;
+
+				
 
 				template<class Archive>
 				constexpr void save(Archive& archive,const unsigned int version) const
@@ -725,7 +766,11 @@ namespace lyonste
 							}
 							candidate=&(*(candidateItr++));
 						}
+
 						const std::pair<VideoMetaData,VideoMetaData>& candidateRef=*candidate;
+
+
+
 						maxSimilarity=accept<double>(candidateRef,sigMatchFunction->getSigSimilarity(cache->getMatchPairFromMetaDatas(candidateRef),maxSimilarity));
 					}
 				}
@@ -750,6 +795,7 @@ namespace lyonste
 					return str;
 				}
 
+				
 			public:
 
 				SigMatchSession(VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties)
@@ -836,7 +882,6 @@ namespace lyonste
 						outStream<<match.vid1.getVidFile().getFilePathStr()<<std::endl;
 						outStream<<match.vid2.getVidFile().getFilePathStr()<<std::endl;
 						outStream<<match.similarity<<std::endl;
-						//outStream<<std::endl;
 					}
 					outStream.close();
 					boost::filesystem::rename(tmpPath,file);
@@ -847,19 +892,33 @@ namespace lyonste
 					writeToTextFile(matchFile.wstring()+L".txt");
 				}
 
-				constexpr DisjointSet<VideoMetaData> getMatchDisjointSet() const noexcept
+
+				constexpr DisjointSet<VideoMetaData> getMatchDisjointSet(size_t maxNumMatches = std::numeric_limits<size_t>::max(),const MutualMap<fileManagement::FileInfo>& blackList=MutualMap<fileManagement::FileInfo>()) const noexcept
 				{
 					DisjointSet<VideoMetaData> disjointSet;
+					size_t numMatches = 0;
 					for(const SigMatch& sigMatch:matches)
 					{
-						disjointSet.makeUnion(sigMatch.vid1,sigMatch.vid2);
+						const VideoMetaData& vid1 = sigMatch.vid1;
+						const VideoMetaData& vid2 = sigMatch.vid2;
+						const fileManagement::FileInfo& vidFile1 = vid1.getVidFile();
+						const fileManagement::FileInfo& vidFile2 = vid2.getVidFile();
+						if (vidFile1.pathExists() && vidFile2.pathExists() && !blackList.contains(vidFile1,vidFile2))
+						{
+							disjointSet.makeUnion(vid1, vid2);
+							if (++numMatches >= maxNumMatches)
+							{
+								break;
+							}
+						}
+						
 					}
 					return disjointSet;
 				}
 
-				constexpr std::vector<std::unordered_set<VideoMetaData>> getSortedMatchGroups() const noexcept
+				constexpr std::vector<std::unordered_set<VideoMetaData>> getSortedMatchGroups(size_t maxNumMatches=std::numeric_limits<size_t>::max(), const MutualMap<fileManagement::FileInfo>& blackList = MutualMap<fileManagement::FileInfo>()) const noexcept
 				{
-					DisjointSet<VideoMetaData> disjointSet=getMatchDisjointSet();
+					DisjointSet<VideoMetaData> disjointSet=getMatchDisjointSet(maxNumMatches,blackList);
 					std::unordered_set<SigMatch,SigMatchHash,SigMatchEquals> sigPairSet(matches.begin(),matches.end());
 					std::vector<std::unordered_set<VideoMetaData>> vectorView=disjointSet.getVectorView();
 					std::multimap<double,std::unordered_set<VideoMetaData>> sortedGroups;
@@ -902,51 +961,48 @@ namespace lyonste
 					return sortedVectorView;
 				}
 
-				template<class VidFileContainer>
-				constexpr void moveMatches(const VidFileContainer& vidFileContainer,const boost::filesystem::path& rootDir) const
+				
+				constexpr void moveMatches(const boost::filesystem::path& rootDir, size_t maxNumMatches = std::numeric_limits<size_t>::max(),  size_t maxGroupSize= std::numeric_limits<size_t>::max(),const MutualMap<fileManagement::FileInfo>& blackList = MutualMap<fileManagement::FileInfo>()) const
 				{
-					const auto& vectorView=getSortedMatchGroups();
+					const auto& vectorView=getSortedMatchGroups(maxNumMatches,blackList);
 					size_t numDigits=getNumDigits(vectorView.size());
 					size_t folderNum=0;
 					for(const auto& set:vectorView)
 					{
+						if (set.size() > maxGroupSize)
+						{
+							continue;
+						}
 						std::string folderName=std::to_string(folderNum);
 						boost::filesystem::path dir=rootDir/boost::filesystem::path(getFolderNum(std::to_string(folderNum++),numDigits));
 						boost::filesystem::create_directories(dir);
 						for(const auto& metaData:set)
 						{
-							const fileManagement::FileInfo& cacheVidFile=metaData.getVidFile();
-							auto itr=std::find(vidFileContainer.begin(),vidFileContainer.end(),cacheVidFile);
-							if(itr!=vidFileContainer.end())
+							const fileManagement::FileInfo& vidFile=metaData.getVidFile();
+							const boost::filesystem::path& vidPath=vidFile.getPath();
+							boost::filesystem::path dst=dir/vidFile.getPath().filename();
+							if(boost::filesystem::exists(dst))
 							{
-								const fileManagement::FileInfo& vidFile=*itr;
-								if(vidFile.pathExists())
+								const std::string fullPath=fileManagement::FileInfo(dst).getFilePathStr();
+								size_t index=fullPath.find_last_of(".");
+								const std::string rawPath=fullPath.substr(0,index);
+								const std::string extension=fullPath.substr(index+1);
+								size_t num=1;
+								for(;;)
 								{
-									const boost::filesystem::path& vidPath=vidFile.getPath();
-									boost::filesystem::path dst=dir/vidFile.getPath().filename();
-									if(boost::filesystem::exists(dst))
+									if(!boost::filesystem::exists(dst=boost::filesystem::path(rawPath+"("+std::to_string(num++)+")."+extension)))
 									{
-										const std::string fullPath=fileManagement::FileInfo(dst).getFilePathStr();
-										size_t index=fullPath.find_last_of(".");
-										const std::string rawPath=fullPath.substr(0,index);
-										const std::string extension=fullPath.substr(index+1);
-										size_t num=1;
-										for(;;)
-										{
-											if(!boost::filesystem::exists(dst=boost::filesystem::path(rawPath+"("+std::to_string(num++)+")."+extension)))
-											{
-												break;
-											}
-										}
+										break;
 									}
-									std::cout<<"Moving "<<vidPath<<" to "<<dst<<std::endl;
-									boost::filesystem::rename(vidPath,dst);
 								}
 							}
-
+							std::cout<<"Moving "<<vidPath<<" to "<<dst<<std::endl;
+							boost::filesystem::rename(vidPath,dst);
 						}
 					}
 				}
+
+
 
 				constexpr void generateMatches()
 				{
@@ -994,18 +1050,24 @@ namespace lyonste
 				std::chrono::system_clock::time_point sessionStartTime;
 				std::chrono::system_clock::time_point lastReportTime;
 				std::chrono::milliseconds reportInterval;
+				bool printProgress;
+				bool printMatches;
 
 				constexpr void reportMatch(const std::pair<VideoMetaData,VideoMetaData>& candidate,double similarity) noexcept
 				{
 					const std::chrono::system_clock::time_point& finishTime=std::chrono::system_clock::now();
 					const size_t matchFileSize=cache->getKeyFrameFileSize(candidate);
 					std::stringstream ss;
-					ss<<"MATCH"<<std::endl
-						<<"\tVid1       = "<<candidate.first.getVidFile().getFilePathStr()<<std::endl
-						<<"\tVid2       = "<<candidate.second.getVidFile().getFilePathStr()<<std::endl
-						<<"\tSimilarity = "<<similarity<<std::endl;
+					if (printMatches)
+					{
+						ss << "MATCH" << std::endl
+							<< "\tVid1       = " << candidate.first.getVidFile().getFilePathStr() << std::endl
+							<< "\tVid2       = " << candidate.second.getVidFile().getFilePathStr() << std::endl
+							<< "\tSimilarity = " << similarity << std::endl;
+					}
+					
 					std::lock_guard<std::mutex> lock(reportMut);
-					if(finishTime-lastReportTime>=reportInterval)
+					if(printProgress && finishTime-lastReportTime>=reportInterval)
 					{
 
 						const double elapsedMilliseconds=double(std::chrono::duration_cast<std::chrono::milliseconds>(finishTime-sessionStartTime).count());
@@ -1030,7 +1092,7 @@ namespace lyonste
 					const std::chrono::system_clock::time_point& finishTime=std::chrono::system_clock::now();
 					const size_t matchFileSize=cache->getKeyFrameFileSize(candidate);
 					std::lock_guard<std::mutex> lock(reportMut);
-					if(finishTime-lastReportTime>=reportInterval)
+					if(printProgress && finishTime-lastReportTime>=reportInterval)
 					{
 						const double elapsedMilliseconds=double(std::chrono::duration_cast<std::chrono::milliseconds>(finishTime-sessionStartTime).count());
 						const double bytesPerSecond=double(consumedFileSize+=matchFileSize)/(elapsedMilliseconds/1000.0);
@@ -1088,10 +1150,13 @@ namespace lyonste
 					,sessionStartTime(std::chrono::system_clock::now())
 					,lastReportTime(std::chrono::system_clock::now())
 					,reportInterval(properties.get<size_t>("reportIntervalMillis",5000))
+					,printProgress(properties.get<bool>("printProgress",true))
+					,printMatches(properties.get<bool>("printMatches",true))
 				{
 
 				}
 			};
+
 
 			template<feature2D::featureDescription::DescriptorType descType>
 			constexpr SigMatchSession<descType>* getSigMatchSession(VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties)
