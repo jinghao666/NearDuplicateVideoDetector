@@ -15,7 +15,6 @@
 #include <fileapi.h>
 #include <WinBase.h>
 #endif
-//#define PRINT_COPY_FILEINFO
 namespace lyonste
 {
 	namespace fileManagement
@@ -35,7 +34,6 @@ namespace lyonste
 					,FILE_FLAG_BACKUP_SEMANTICS
 					,0))
 			{
-
 			}
 			inline ~HandleWrapper()
 			{
@@ -46,7 +44,6 @@ namespace lyonste
 			}
 		};
 
-#ifdef BOOST_WINDOWS_API
 		class FileInfo
 		{
 		private:
@@ -131,11 +128,6 @@ namespace lyonste
 				,indxHi(that.indxHi)
 				,hash(that.hash)
 			{
-#ifdef _DEBUG
-#ifdef PRINT_COPY_FILEINFO
-				std::cout<<"FileInfo copy constructor"<<std::endl;
-#endif
-#endif
 			}
 			FileInfo(FileInfo&& that) noexcept
 				:path(std::move(that.path))
@@ -157,11 +149,6 @@ namespace lyonste
 					indxLo=that.indxLo;
 					indxHi=that.indxHi;
 					hash=that.hash;
-#ifdef _DEBUG
-#ifdef PRINT_COPY_FILEINFO
-					std::cout<<"FileInfo assignment operator"<<std::endl;
-#endif
-#endif
 				}
 				return *this;
 			}
@@ -271,15 +258,8 @@ namespace lyonste
 
 		};
 
-		std::ostream & operator<<(std::ostream & stream,const FileInfo & info)
-		{
-			return stream<<info.getFilePathStr();
-		}
+		extern std::ostream & operator<<(std::ostream & stream, const FileInfo & info);
 
-		template<typename pathT=FileInfo>
-#else
-		template<typename pathT=boost::filesystem::path>
-#endif
 		class FileGatherer
 		{
 		private:
@@ -289,7 +269,7 @@ namespace lyonste
 			std::vector<boost::regex> includePatterns;
 			std::vector<boost::regex> excludePatterns;
 
-			static constexpr bool matchesOneOf(const std::string& path,const std::vector<boost::regex>& regexes)
+			static bool matchesOneOf(const std::string& path,const std::vector<boost::regex>& regexes)
 			{
 				for each(const boost::regex& regex in regexes)
 				{
@@ -301,7 +281,7 @@ namespace lyonste
 				return false;
 			}
 
-			static constexpr std::vector<boost::regex> createPatternVector(const std::string& key,const boost::property_tree::ptree& properties)
+			static std::vector<boost::regex> createPatternVector(const std::string& key,const boost::property_tree::ptree& properties)
 			{
 				std::vector<boost::regex> patterns;
 				for(auto itr=properties.find(key);itr!=properties.not_found()&&itr->first==key;++itr)
@@ -317,12 +297,12 @@ namespace lyonste
 
 		public:
 
-			constexpr const boost::filesystem::path getRoot() const noexcept
+			const boost::filesystem::path getRoot() const noexcept
 			{
 				return root;
 			}
 
-			constexpr FileGatherer(const boost::filesystem::path& root,size_t maxDepth,bool followSymlink,std::vector<boost::regex>&& includePatterns,std::vector<boost::regex>&& excludePatterns):
+			FileGatherer(const boost::filesystem::path& root,size_t maxDepth,bool followSymlink,std::vector<boost::regex>&& includePatterns,std::vector<boost::regex>&& excludePatterns):
 				root(root),
 				maxDepth(maxDepth),
 				followSymlink(followSymlink),
@@ -330,7 +310,7 @@ namespace lyonste
 				excludePatterns(std::move(excludePatterns))
 			{}
 
-			constexpr FileGatherer(boost::filesystem::path&& root,size_t maxDepth,bool followSymlink,std::vector<boost::regex>&& includePatterns,std::vector<boost::regex>&& excludePatterns):
+			FileGatherer(boost::filesystem::path&& root,size_t maxDepth,bool followSymlink,std::vector<boost::regex>&& includePatterns,std::vector<boost::regex>&& excludePatterns):
 				root(std::move(root)),
 				maxDepth(maxDepth),
 				followSymlink(followSymlink),
@@ -338,7 +318,7 @@ namespace lyonste
 				excludePatterns(std::move(excludePatterns))
 			{}
 
-			constexpr FileGatherer(const boost::property_tree::ptree& properties):
+			FileGatherer(const boost::property_tree::ptree& properties):
 				FileGatherer(
 					properties.get<std::string>("root"),
 					properties.get<size_t>("maxDepth",std::numeric_limits<size_t>::max()),
@@ -407,7 +387,7 @@ namespace lyonste
 		};
 	}
 }
-#ifdef BOOST_WINDOWS_API
+
 namespace std
 {
 	template<>
@@ -419,6 +399,4 @@ namespace std
 		}
 	};
 }
-
-#endif
 

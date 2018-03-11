@@ -663,7 +663,7 @@ namespace lyonste
 				};
 
 				template<bool scaleNormalized,HAL_FLAG hal>
-				class FreakDescriptorGeneratorFactory<true,scaleNormalized,hal> : public DescriptorGeneratorFactory<Freak>
+				class FreakDescriptorGeneratorFactory<true,scaleNormalized,hal> : public DescriptorGeneratorFactoryImpl<Freak>
 				{
 				private:
 					friend class FreakDescriptorGenerator<true,scaleNormalized,hal>;
@@ -740,7 +740,7 @@ namespace lyonste
 				};
 
 				template<bool scaleNormalized,HAL_FLAG hal>
-				class FreakDescriptorGeneratorFactory<false,scaleNormalized,hal>: public DescriptorGeneratorFactory<Freak>
+				class FreakDescriptorGeneratorFactory<false,scaleNormalized,hal>: public DescriptorGeneratorFactoryImpl<Freak>
 				{
 				private:
 					friend class FreakDescriptorGenerator<false,scaleNormalized,hal>;
@@ -814,7 +814,7 @@ namespace lyonste
 				}
 
 				template<bool orientationNormalized,HAL_FLAG hal>
-				class FreakDescriptorGenerator<orientationNormalized,true,hal> : public DescriptorGenerator<Freak>
+				class FreakDescriptorGenerator<orientationNormalized,true,hal> : public DescriptorGeneratorImpl<Freak>
 				{
 				private:
 					const size_t cols;
@@ -887,7 +887,7 @@ namespace lyonste
 				};
 
 				template<bool orientationNormalized,HAL_FLAG hal>
-				class FreakDescriptorGenerator<orientationNormalized,false,hal>: public DescriptorGenerator<Freak>
+				class FreakDescriptorGenerator<orientationNormalized,false,hal>: public DescriptorGeneratorImpl<Freak>
 				{
 				private:
 					const size_t cols;
@@ -962,7 +962,7 @@ namespace lyonste
 				}
 			}
 
-			boost::property_tree::ptree DescriptorPropertyGenerator<Freak>::operator()(float patternScale,size_t numOctaves,bool orientationNormalized,bool scaleNormalized,const ushort(&selectedPairs)[freak::NUM_PAIRS])
+			boost::property_tree::ptree DescriptorPropertyGeneratorImpl<Freak>::operator()(float patternScale,size_t numOctaves,bool orientationNormalized,bool scaleNormalized,const ushort(&selectedPairs)[freak::NUM_PAIRS])
 			{
 				CV_Assert(patternScale==patternScale&&patternScale>=1.0f);
 				CV_Assert(numOctaves);
@@ -984,7 +984,7 @@ namespace lyonste
 			}
 
 			template<>
-			DescriptorGeneratorFactory<Freak>* DescriptorGeneratorFactory<Freak>::getDescriptorGeneratorFactory(const boost::property_tree::ptree & properties,const lyonste::hal::HAL_FLAG hal)
+			DescriptorGeneratorFactoryImpl<Freak>* DescriptorGeneratorFactoryImpl<Freak>::getDescriptorGeneratorFactory(const boost::property_tree::ptree & properties,const lyonste::hal::HAL_FLAG hal)
 			{
 				const bool orientationNormalized=properties.get<bool>("orientationNormalized",true);
 				const bool scaleNormalized=properties.get<bool>("scaleNormalized",true);

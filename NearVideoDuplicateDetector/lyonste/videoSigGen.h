@@ -1,7 +1,8 @@
 #pragma once
 
 #include "videoSig.h"
-#include <opencv2\videoio.hpp>
+#include <mutex>
+
 #include "feature2D/featureDetection/featureDetection.h"
 #include <boost/exception/diagnostic_information.hpp>
 
@@ -11,95 +12,12 @@ namespace lyonste
 	{
 		namespace videoSigGen
 		{
-			template<feature2D::featureDescription::DescriptorType descType>
-			class SigGenFunction
+			template<class VidFileContainer>
+			class SigGenSessionImpl
 			{
 			protected:
-				VideoSigCache<descType>* cache;
-				feature2D::featureDetection::KeyPointGeneratorFactory* kpGenFactory;
-				feature2D::featureDescription::DescriptorGeneratorFactory<descType>* descGenFactory;
-				double keyFrameInterval;
-			public:
-				constexpr SigGenFunction(VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties):
-					cache(&cache),
-					kpGenFactory(feature2D::featureDetection::KeyPointGeneratorFactory::getKeyPointGeneratorFactory(properties.get_child("keyPointGeneratorProperties"))),
-					descGenFactory(feature2D::featureDescription::DescriptorGeneratorFactory<descType>::getDescriptorGeneratorFactory(properties.get_child("descriptorGeneratorProperities"))),
-					keyFrameInterval(properties.get<double>("keyFrameInterval",2000.0))
-				{}
-
-				constexpr std::tuple<VideoMetaData,fileManagement::FileInfo,size_t> generateSig(const fileManagement::FileInfo& vidFile) const
-				{
-					const std::string& fileName=vidFile.getFilePathStr();
-					if(vidFile.pathExists())
-					{
-						cv::VideoCapture videoCapture(fileName);
-						if(videoCapture.isOpened())
-						{
-							cv::Mat captureMat;
-							if(videoCapture.read(captureMat))
-							{
-								size_t cols(captureMat.cols);
-								size_t rows(captureMat.rows);
-								if(cols && rows)
-								{
-									std::unique_ptr<feature2D::featureDetection::KeyPointGenerator> kpGen(kpGenFactory->getKeyPointGenerator(cols,rows));
-									std::unique_ptr<feature2D::featureDescription::DescriptorGenerator<descType>> descGen(descGenFactory->getDescriptorGenerator(cols,rows));
-									std::vector<KeyFramePair<descType>> keyFrames;
-									matrix::Mat2D<uchar> gray(captureMat);
-									std::vector<cv::KeyPoint> keyPoints;
-									double nextPosition=keyFrameInterval;
-									double timeIndex;
-									for(;;)
-									{
-										kpGen->detect(gray,keyPoints);
-										keyFrames.emplace_back(timeIndex=videoCapture.get(cv::CAP_PROP_POS_MSEC),descGen->compute(gray,keyPoints));
-										for(;;)
-										{
-											if(!videoCapture.grab())
-											{
-												goto endHere;
-											}
-											if((timeIndex=videoCapture.get(cv::CAP_PROP_POS_MSEC))>=nextPosition)
-											{
-												nextPosition+=keyFrameInterval;
-												videoCapture.retrieve(captureMat);
-												if(!videoCapture.retrieve(captureMat))
-												{
-													goto endHere;
-												}
-												gray.overwrite(captureMat);
-												break;
-											}
-										}
-									}
-endHere:
-									//return cache.addSig(VideoMetaData(vidFile,cols,rows,videoCapture.get(cv::CAP_PROP_FRAME_COUNT),videoCapture.get(cv::CAP_PROP_FPS),timeIndex),std::move(keyFrames));
-									return cache->addSig(VideoMetaData(vidFile,cols,rows,videoCapture.get(cv::CAP_PROP_FRAME_COUNT),videoCapture.get(cv::CAP_PROP_FPS),timeIndex),std::move(keyFrames));
-								}
-								CV_Error(1,"Video dimensions for file "+fileName+" are invalid");
-							}
-							CV_Error(1,"Unable to grab frame from video file "+fileName);
-						}
-						CV_Error(1,"Unable to open video file "+fileName);
-					}
-					CV_Error(1,"Video file "+fileName+" does not exist");
-					throw std::exception(("Unspecified error on file "+fileName).c_str());//this is here to placate a compiler warning about not returning a value
-				}
-
-				inline ~SigGenFunction() noexcept
-				{
-					delete kpGenFactory;
-					delete descGenFactory;
-				}
-			};
-
-			template<feature2D::featureDescription::DescriptorType descType,class VidFileContainer>
-			class SigGenSession
-			{
-			protected:
-				VideoSigCache<descType>* cache;
 				size_t numThreads;
-				SigGenFunction<descType> sigGenFunction;
+				SigGenFunction* sigGenFunction;
 				typename VidFileContainer::const_iterator vidFileItr;
 				typename VidFileContainer::const_iterator vidFileEnd;
 				std::mutex vidFileGetMut;
@@ -119,7 +37,7 @@ endHere:
 						}
 						try
 						{
-							sigGenFunction.generateSig(*vidFile);
+							sigGenFunction->generateSig(*vidFile);
 						}
 						catch(...)
 						{
@@ -136,14 +54,18 @@ endHere:
 					vidFileItr=vidFileEnd;
 				}
 
-				constexpr SigGenSession(VidFileContainer& vidFileContainer,VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties):
-					cache(&cache),
+				constexpr SigGenSessionImpl(VidFileContainer& vidFileContainer,VideoSigCache* cache,const boost::property_tree::ptree& properties):
 					numThreads(getNumThreadsProperty(properties)),
-					sigGenFunction(cache,properties),
+					sigGenFunction(cache->getSigGenFunction(properties)),
 					vidFileItr(vidFileContainer.cbegin()),
 					vidFileEnd(vidFileContainer.cend()),
 					vidFileGetMut()
 				{}
+
+				size_t getNumSigsInCache() const noexcept
+				{
+					return sigGenFunction->getNumSigsInCache();
+				}
 
 				constexpr void generateSigs()
 				{
@@ -152,19 +74,25 @@ endHere:
 					threads.reserve(--numThreads);
 					for(;numThreads--;)
 					{
-						threads.emplace_back(&SigGenSession<descType,VidFileContainer>::sigGenThread,this);
+						threads.emplace_back(&SigGenSessionImpl<VidFileContainer>::sigGenThread,this);
 					}
 					sigGenThread();
 					for(auto& thread:threads)
 					{
 						thread.join();
 					}
-					cache->writeToFile();
+					sigGenFunction->writeCacheToFile();
+					//std::cout << "Finished generating signatures. Total number of signatures in cache = " << sigGenFunction->getNumSigsInCache() << std::endl;
+				}
+				
+				virtual ~SigGenSessionImpl()
+				{
+					delete sigGenFunction;
 				}
 			};
 
-			template<feature2D::featureDescription::DescriptorType descType,class VidFileContainer>
-			class VerboseSigGenSession: public SigGenSession<descType,VidFileContainer>
+			template<class VidFileContainer>
+			class VerboseSigGenSessionImpl: public SigGenSessionImpl<VidFileContainer>
 			{
 			protected:
 
@@ -251,7 +179,7 @@ endHere:
 						const std::chrono::system_clock::time_point& startTime=std::chrono::system_clock::now();
 						try
 						{
-							reportSuccess(startTime,sigGenFunction.generateSig(*vidFile));
+							reportSuccess(startTime,sigGenFunction->generateSig(*vidFile));
 						}
 						catch(...)
 						{
@@ -262,8 +190,8 @@ endHere:
 
 			public:
 
-				constexpr VerboseSigGenSession(VidFileContainer& vidFileContainer,VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties)
-					:SigGenSession<descType,VidFileContainer>(vidFileContainer,cache,properties),
+				constexpr VerboseSigGenSessionImpl(VidFileContainer& vidFileContainer, VideoSigCache* cache,const boost::property_tree::ptree& properties)
+					:SigGenSessionImpl<VidFileContainer>(vidFileContainer,cache,properties),
 					reportMut(),
 					finishIndex(0),
 					totalNumVids(vidFileContainer.size()),
@@ -275,15 +203,17 @@ endHere:
 				}
 			};
 
-			template<feature2D::featureDescription::DescriptorType descType,class VidFileContainer>
-			constexpr SigGenSession<descType,VidFileContainer>* getSigGenSession(VidFileContainer& vidFileContainer,VideoSigCache<descType>& cache,const boost::property_tree::ptree& properties)
+
+
+
+			template<class VidFileContainer>
+			constexpr SigGenSessionImpl<VidFileContainer>* getSigGenSession(VidFileContainer& vidFileContainer,VideoSigCache* cache,const boost::property_tree::ptree& properties)
 			{
-				cache.pruneCache(vidFileContainer);
 				if(properties.get<boolean>("verbose",true))
 				{
-					return new VerboseSigGenSession<descType,VidFileContainer>(vidFileContainer,cache,properties);
+					return new VerboseSigGenSessionImpl<VidFileContainer>(vidFileContainer,cache,properties);
 				}
-				return new SigGenSession<descType,VidFileContainer>(vidFileContainer,cache,properties);
+				return new SigGenSessionImpl<VidFileContainer>(vidFileContainer,cache,properties);
 			}
 
 		}

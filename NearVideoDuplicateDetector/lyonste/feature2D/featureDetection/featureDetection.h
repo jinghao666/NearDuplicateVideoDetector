@@ -2,7 +2,8 @@
 #include "../../matrix/matrix.h"
 #include <boost/property_tree/ptree.hpp>
 #include <opencv2/features2d.hpp>
-#include "../../lyonste.h"
+//#include "../../lyonste.h"
+#include "../../ToStringUtilities.h"
 
 namespace lyonste
 {

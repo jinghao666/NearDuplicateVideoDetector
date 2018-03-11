@@ -17,11 +17,14 @@ namespace lyonste
 			template<DescriptorType descType>
 			class DescTypeInfo;
 
-			template<DescriptorType descType>
 			class DescriptorPropertyGenerator;
 
 			template<DescriptorType descType>
-			class Descriptors
+			class DescriptorPropertyGeneratorImpl;
+
+
+			template<DescriptorType descType>
+			class DescriptorsImpl
 			{
 			private:
 				size_t numDescriptors;
@@ -75,7 +78,7 @@ namespace lyonste
 
 			public:
 
-				constexpr Descriptors() noexcept
+				constexpr DescriptorsImpl() noexcept
 					:numDescriptors(0),
 					data(NULL)
 				{
@@ -102,20 +105,20 @@ namespace lyonste
 					return data+(DescTypeInfo<descType>::descriptorCols*row);
 				}
 
-				constexpr Descriptors(const Descriptors<descType>& that) noexcept
+				constexpr DescriptorsImpl(const DescriptorsImpl<descType>& that) noexcept
 					:numDescriptors(that.numDescriptors),
 					data(copyData(numDescriptors,that.data))
 				{
 				}
 
-				constexpr Descriptors(Descriptors<descType>&& that) noexcept
+				constexpr DescriptorsImpl(DescriptorsImpl<descType>&& that) noexcept
 					:numDescriptors(that.numDescriptors),
 					data(that.data)
 				{
 					that.data=NULL;
 				}
 
-				constexpr Descriptors<descType>& operator=(const Descriptors<descType>& that) noexcept
+				constexpr DescriptorsImpl<descType>& operator=(const DescriptorsImpl<descType>& that) noexcept
 				{
 					if(this!=&that)
 					{
@@ -139,7 +142,7 @@ namespace lyonste
 					return *this;
 				}
 
-				constexpr Descriptors<descType>& operator=(Descriptors<descType>&& that) noexcept
+				constexpr DescriptorsImpl<descType>& operator=(DescriptorsImpl<descType>&& that) noexcept
 				{
 					if(this!=&that)
 					{
@@ -150,7 +153,7 @@ namespace lyonste
 					return *this;
 				}
 
-				constexpr Descriptors(const size_t numDescriptors) noexcept
+				constexpr DescriptorsImpl(const size_t numDescriptors) noexcept
 					:numDescriptors(numDescriptors),
 					data(numDescriptors?new typename DescTypeInfo<descType>::Elem[numDescriptors*DescTypeInfo<descType>::descriptorCols]:NULL)
 				{
@@ -166,48 +169,48 @@ namespace lyonste
 					return data+row*DescTypeInfo<descType>::descriptorCols+col;
 				}
 
-				~Descriptors() noexcept
+				~DescriptorsImpl() noexcept
 				{
 					delete[] data;
 				}
 			};
 
 			template<DescriptorType descType>
-			class DescriptorGenerator
+			class DescriptorGeneratorImpl
 			{
 			public:
 
 				virtual typename DescTypeInfo<descType>::DescriptorMat compute(const matrix::Ptr2D<uchar>& frame,std::vector<cv::KeyPoint>& keyPoints)=0;
 
-				virtual ~DescriptorGenerator()
+				virtual ~DescriptorGeneratorImpl()
 				{
 				}
 			};
 			
 			template<DescriptorType descType>
-			class DescriptorGeneratorFactory
+			class DescriptorGeneratorFactoryImpl
 			{
 			public:
-				virtual DescriptorGenerator<descType>* getDescriptorGenerator(size_t cols,size_t rows) const=0;
+				virtual DescriptorGeneratorImpl<descType>* getDescriptorGenerator(size_t cols,size_t rows) const=0;
 				virtual void writeProperties(boost::property_tree::ptree& properties) const=0;
-				virtual ~DescriptorGeneratorFactory()
+				virtual ~DescriptorGeneratorFactoryImpl()
 				{
 
 				}
 				
-				static DescriptorGeneratorFactory<descType>* getDescriptorGeneratorFactory(const boost::property_tree::ptree& properties,const lyonste::hal::HAL_FLAG hal=lyonste::hal::halFlag);
+				static DescriptorGeneratorFactoryImpl<descType>* getDescriptorGeneratorFactory(const boost::property_tree::ptree& properties,const lyonste::hal::HAL_FLAG hal=lyonste::hal::halFlag);
 			};
 
 			template<DescriptorType descType>
-			class DescriptorMatcher
+			class DescriptorMatcherImpl
 			{
 			public:
-				virtual double getFrameSimilarity(const Descriptors<descType>& desc1,const Descriptors<descType>& desc2) const noexcept=0;
-				virtual ~DescriptorMatcher() noexcept
+				virtual double getFrameSimilarity(const DescriptorsImpl<descType>& desc1,const DescriptorsImpl<descType>& desc2) const noexcept=0;
+				virtual ~DescriptorMatcherImpl() noexcept
 				{
 				}
 
-				static constexpr DescriptorMatcher<descType>* getDescriptorMatcher(const boost::property_tree::ptree& properties,lyonste::hal::HAL_FLAG halFlag=lyonste::hal::halFlag);
+				static constexpr DescriptorMatcherImpl<descType>* getDescriptorMatcher(const boost::property_tree::ptree& properties,lyonste::hal::HAL_FLAG halFlag=lyonste::hal::halFlag);
 			};
 
 			namespace hal
@@ -226,7 +229,7 @@ namespace lyonste
 			}
 
 			template<DescriptorType descType,cv::NormTypes norm,lyonste::hal::HAL_FLAG hal=HAL_NONE>
-			class NearestNeighborBFDescriptorMatcher: public DescriptorMatcher<descType>
+			class NearestNeighborBFDescriptorMatcherImpl: public DescriptorMatcherImpl<descType>
 			{
 			private:
 
@@ -274,7 +277,7 @@ namespace lyonste
 				}
 
 			public:
-				constexpr double getFrameSimilarity(const Descriptors<descType>& desc1,const Descriptors<descType>& desc2) const noexcept override
+				constexpr double getFrameSimilarity(const DescriptorsImpl<descType>& desc1,const DescriptorsImpl<descType>& desc2) const noexcept override
 				{
 					size_t numQueryDescriptors=desc1.getNumDescriptors();
 					if(numQueryDescriptors)
@@ -319,7 +322,7 @@ namespace lyonste
 			};
 			
 			template<DescriptorType descType>
-			constexpr DescriptorMatcher<descType>* DescriptorMatcher<descType>::getDescriptorMatcher(const boost::property_tree::ptree & properties,lyonste::hal::HAL_FLAG halFlag)
+			constexpr DescriptorMatcherImpl<descType>* DescriptorMatcherImpl<descType>::getDescriptorMatcher(const boost::property_tree::ptree & properties,lyonste::hal::HAL_FLAG halFlag)
 			{
 				const bool bruteForce=properties.get<bool>("bruteForce",true);
 				const std::string matchMethod=properties.get<std::string>("matchMethod","knn2Ratio");
@@ -332,9 +335,9 @@ namespace lyonste
 						{
 							if(lyonste::hal::supports<lyonste::hal::HAL_SSE2>(halFlag))
 							{
-								return new NearestNeighborBFDescriptorMatcher<descType,cv::NormTypes::NORM_HAMMING,lyonste::hal::HAL_SSE2>();
+								return new NearestNeighborBFDescriptorMatcherImpl<descType,cv::NormTypes::NORM_HAMMING,lyonste::hal::HAL_SSE2>();
 							}
-							return new NearestNeighborBFDescriptorMatcher<descType,cv::NormTypes::NORM_HAMMING,lyonste::hal::HAL_NONE>();
+							return new NearestNeighborBFDescriptorMatcherImpl<descType,cv::NormTypes::NORM_HAMMING,lyonste::hal::HAL_NONE>();
 						}
 						CV_Error(1,"normType "+normType+" not supported");
 					}
@@ -394,7 +397,7 @@ namespace lyonste
 			}
 			
 			template<>
-			class DescriptorPropertyGenerator<Freak>
+			class DescriptorPropertyGeneratorImpl<Freak>
 			{
 			public:
 				boost::property_tree::ptree operator()(float patternScale=22.f,size_t numOctaves=4,bool orientationNormalized=true,bool scaleNormalized=true,const ushort(&selectedPairs)[freak::NUM_PAIRS]=freak::DEFAULT_PAIRS);
@@ -413,7 +416,7 @@ namespace lyonste
 					descriptorSize=descriptorCols*sizeof(Elem),
 					defaultNorm=cv::NormTypes::NORM_HAMMING
 				};
-				typedef Descriptors<Freak> DescriptorMat;
+				typedef DescriptorsImpl<Freak> DescriptorMat;
 			};
 		}
 	}

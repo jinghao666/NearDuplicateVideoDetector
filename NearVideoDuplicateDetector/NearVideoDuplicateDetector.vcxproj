@@ -157,7 +157,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -211,7 +211,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(OPENCV_DIR)\..\..\include</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -256,15 +256,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="lyonste\BlackAndWhiteList.h" />
     <ClInclude Include="lyonste\feature2D\featureDescription\featureDescription.h" />
     <ClInclude Include="lyonste\feature2D\featureDetection\featureDetection.h" />
-    <ClInclude Include="lyonste\feature2D\featureDetection\segmenttest.h" />
     <ClInclude Include="lyonste\fileManagement.h" />
     <ClInclude Include="lyonste\hal.h" />
     <ClInclude Include="lyonste\lyonste.h" />
     <ClInclude Include="lyonste\matrix\integral.h" />
     <ClInclude Include="lyonste\matrix\matrix.h" />
     <ClInclude Include="lyonste\matrix\resizer.h" />
+    <ClInclude Include="lyonste\ToStringUtilities.h" />
     <ClInclude Include="lyonste\videoSig.h" />
     <ClInclude Include="lyonste\videoSigGen.h" />
     <ClInclude Include="lyonste\videoSigMatch.h" />
@@ -279,6 +280,8 @@
     <ClCompile Include="lyonste\feature2D\featureDetection\featureDetection.cpp" />
     <ClCompile Include="lyonste\feature2D\featureDetection\motionDetection.cpp" />
     <ClCompile Include="lyonste\feature2D\featureDetection\orb.cpp" />
+    <ClCompile Include="lyonste\fileManagement.cpp" />
+    <ClCompile Include="lyonste\videoSig.cpp" />
     <ClCompile Include="NearVideoDuplicateDetector.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

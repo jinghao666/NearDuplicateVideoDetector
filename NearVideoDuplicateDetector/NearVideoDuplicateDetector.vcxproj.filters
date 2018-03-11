@@ -57,7 +57,10 @@
     <ClInclude Include="lyonste\videoSigMatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lyonste\feature2D\featureDetection\segmenttest.h">
+    <ClInclude Include="lyonste\ToStringUtilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lyonste\BlackAndWhiteList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -84,6 +87,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lyonste\feature2D\featureDetection\agast.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\videoSig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lyonste\fileManagement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
